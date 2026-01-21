@@ -208,7 +208,7 @@
         }
         
         .legend.collapsed .legend-toggle {
-            transform: rotate(180deg);
+            transform: rotate(-90deg);
         }
         
         .legend-content {
@@ -496,6 +496,9 @@
                 <button class="btn warning" id="pause-resume" disabled style="display: none;">
                     Pause Questions
                 </button>
+                <button class="btn critical" id="end-session" disabled style="display: none;">
+                    End Session
+                </button>
                 <div style="background: rgba(0, 122, 255, 0.1); border: 1px solid rgba(0, 122, 255, 0.3); border-radius: 6px; padding: 12px; margin-top: 12px; font-size: 12px; color: #b3d9ff; line-height: 1.4;">
                     Start questions when participants are ready. Questions then advance automatically with pause/resume control.
                 </div>
@@ -633,6 +636,7 @@
         const createSessionBtn = document.getElementById('create-session');
         const startQuestionsBtn = document.getElementById('start-questions');
         const pauseResumeBtn = document.getElementById('pause-resume');
+        const endSessionBtn = document.getElementById('end-session');
         const createTestUserBtn = document.getElementById('create-test-user');
         const screensaver = document.getElementById('screensaver');
         
@@ -648,6 +652,7 @@
             createSessionBtn.addEventListener('click', createSession);
             startQuestionsBtn.addEventListener('click', startQuestions);
             pauseResumeBtn.addEventListener('click', togglePauseResume);
+            endSessionBtn.addEventListener('click', endSession);
             createTestUserBtn.addEventListener('click', createTestUser);
             
             // Socket events
@@ -766,12 +771,15 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Hide start button, show pause/resume
+                    // Hide start button, show pause/resume and end session
                     startQuestionsBtn.style.display = 'none';
                     pauseResumeBtn.style.display = 'block';
                     pauseResumeBtn.disabled = false;
                     pauseResumeBtn.classList.add('warning');
                     pauseResumeBtn.textContent = 'Pause Questions';
+                    
+                    endSessionBtn.style.display = 'block';
+                    endSessionBtn.disabled = false;
                 } else {
                     startQuestionsBtn.disabled = false;
                     startQuestionsBtn.textContent = 'Start Questions';
@@ -808,6 +816,53 @@
                 }
             } catch (error) {
                 console.error('Error toggling pause/resume:', error);
+            }
+        }
+        
+        async function endSession() {
+            if (!confirm('Are you sure you want to end the session? This will disconnect all participants.')) {
+                return;
+            }
+            
+            endSessionBtn.disabled = true;
+            endSessionBtn.textContent = 'Ending...';
+            
+            try {
+                const response = await fetch('/api/session/end', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Reset UI to initial state
+                    startQuestionsBtn.style.display = 'block';
+                    startQuestionsBtn.disabled = true;
+                    startQuestionsBtn.textContent = 'Start Questions';
+                    
+                    pauseResumeBtn.style.display = 'none';
+                    endSessionBtn.style.display = 'none';
+                    
+                    createSessionBtn.disabled = false;
+                    createSessionBtn.textContent = 'Initialize Embedding Space';
+                    createSessionBtn.classList.add('primary');
+                    
+                    // Hide session info
+                    document.getElementById('session-info').style.display = 'none';
+                    
+                    // Show screensaver
+                    screensaver.style.display = 'flex';
+                    
+                    // Clear visualization
+                    clearVisualization();
+                } else {
+                    endSessionBtn.disabled = false;
+                    endSessionBtn.textContent = 'End Session';
+                }
+            } catch (error) {
+                console.error('Error ending session:', error);
+                endSessionBtn.disabled = false;
+                endSessionBtn.textContent = 'End Session';
             }
         }
         

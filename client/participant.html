@@ -419,6 +419,17 @@
             <p class="submitted-subtitle">Waiting for next signal...</p>
         </div>
         
+        <!-- Session Complete Screen -->
+        <div class="screen final-screen" id="complete-screen">
+            <h2 class="final-title">Session Complete</h2>
+            <p class="final-message">
+                All interaction patterns have been mapped.<br><br>
+                Your collective embedding is now fully formed, 
+                revealing the structural relationships that 
+                emerged from your group dynamics.
+            </p>
+        </div>
+        
         <!-- Final Screen -->
         <div class="screen final-screen" id="final-screen">
             <h2 class="final-title">Identity Layer Removed</h2>
@@ -591,6 +602,28 @@
             setTimeout(() => {
                 icon.style.transform = 'scale(1)';
             }, 200);
+        });
+        
+        socket.on('session-complete', () => {
+            showScreen('complete-screen');
+            
+            // Add subtle pulse animation to completion message
+            document.querySelector('#complete-screen .final-message').classList.add('pulse');
+        });
+        
+        socket.on('session-ended', (data) => {
+            // Show error message for admin-terminated sessions
+            const errorEl = document.getElementById('join-error');
+            errorEl.textContent = data.message || 'Session ended by administrator';
+            errorEl.style.display = 'block';
+            
+            // Show join screen so user knows what happened
+            showScreen('join-screen');
+            
+            // Disable the join form
+            const joinBtn = document.getElementById('join-btn');
+            joinBtn.disabled = true;
+            joinBtn.textContent = 'Session Ended';
         });
         
         socket.on('identity-deleted', () => {

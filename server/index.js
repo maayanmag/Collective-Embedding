@@ -551,6 +551,13 @@ function advanceToNextQuestion() {
     });
     
     io.emit('epoch-update', { epochCount: session.epochCount });
+  } else {
+    // All questions completed - notify participants
+    io.emit('session-complete', {
+      message: 'All questions completed',
+      totalQuestions: session.questions.length,
+      epochCount: session.epochCount
+    });
   }
 }
 
@@ -570,6 +577,37 @@ app.post('/api/session/pause-resume', (req, res) => {
   }
   
   res.json({ success: true, paused: session.isPaused });
+});
+
+// End session endpoint
+app.post('/api/session/end', (req, res) => {
+  if (!session.isActive) {
+    return res.json({ success: false, message: 'No active session to end' });
+  }
+  
+  // Clear any running timers
+  clearTimeout(session.autoAdvanceTimer);
+  
+  // Notify all participants that session ended
+  io.emit('session-ended', {
+    message: 'Session ended by administrator',
+    reason: 'admin_terminated'
+  });
+  
+  // Reset session state
+  session.id = null;
+  session.isActive = false;
+  session.participants.clear();
+  session.responses.clear();
+  session.graph.nodes.clear();
+  session.graph.edges.clear();
+  session.graph.identityMap.clear();
+  session.currentQuestionIndex = -1;
+  session.epochCount = 0;
+  session.identityDeleted = false;
+  session.isPaused = false;
+  
+  res.json({ success: true, message: 'Session ended successfully' });
 });
 
 // Start first question automatically (for auto-advance mode)
