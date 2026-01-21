@@ -168,11 +168,13 @@
         .question-screen {
             flex-direction: column;
             padding: 1.5rem;
+            overflow-y: auto;
         }
         
         .question-header {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
+            flex-shrink: 0;
         }
         
         .question-number {
@@ -319,7 +321,7 @@
         
         /* Responsive adjustments */
         @media (max-height: 600px) {
-            .container {
+            .screen {
                 padding: 1rem;
             }
             
@@ -327,12 +329,84 @@
                 padding: 1rem;
             }
             
-            .join-title, .status-title, .submitted-title {
-                font-size: 1.3rem;
+            .question-header {
+                margin-bottom: 1rem;
             }
             
             .question-text {
-                font-size: 1.1rem;
+                font-size: 1rem;
+                margin-bottom: 0.8rem;
+            }
+            
+            .timer-bar {
+                margin: 0.8rem 0;
+            }
+            
+            .participants-list {
+                margin-bottom: 1rem;
+            }
+            
+            .participant-option {
+                padding: 0.8rem;
+                margin-bottom: 0.5rem;
+                font-size: 0.9rem;
+            }
+            
+            .join-title, .status-title, .submitted-title {
+                font-size: 1.3rem;
+            }
+        }
+        
+        /* Mobile specific adjustments */
+        @media (max-width: 480px) {
+            .screen {
+                padding: 1rem;
+            }
+            
+            .question-screen {
+                padding: 0.8rem;
+            }
+            
+            .question-header {
+                margin-bottom: 0.8rem;
+            }
+            
+            .question-number {
+                font-size: 0.8rem;
+                margin-bottom: 0.3rem;
+            }
+            
+            .question-text {
+                font-size: 1rem;
+                line-height: 1.3;
+                margin-bottom: 0.8rem;
+                min-height: 2.6rem;
+            }
+            
+            .timer-text {
+                font-size: 0.7rem;
+                margin-top: 0.3rem;
+            }
+            
+            .participants-list {
+                margin-bottom: 1rem;
+                max-height: 40vh;
+            }
+            
+            .participant-option {
+                padding: 0.8rem;
+                margin-bottom: 0.4rem;
+                font-size: 0.9rem;
+            }
+            
+            .question-actions {
+                gap: 0.5rem;
+                flex-shrink: 0;
+            }
+            
+            .btn {
+                padding: 0.8rem 1rem;
+                font-size: 0.9rem;
             }
         }
         
