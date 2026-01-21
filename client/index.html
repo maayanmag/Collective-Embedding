@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collective Embedding - Mapping Interaction Patterns</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .screensaver {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .screensaver-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .screensaver-text {
+            position: relative;
+            z-index: 11;
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 200;
+            letter-spacing: 0.1em;
+            opacity: 0.8;
+            animation: pulse 3s ease-in-out infinite;
+        }
+        
+        .screensaver-subtitle {
+            position: relative;
+            z-index: 11;
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            font-weight: 300;
+            opacity: 0.6;
+            text-align: center;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        
+        .main-interface {
+            display: none;
+            padding: 2rem;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .title {
+            font-size: 3rem;
+            font-weight: 100;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #ffffff, #cccccc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #888;
+            font-weight: 300;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .btn {
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn.primary {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            border-color: #007bff;
+        }
+        
+        .btn.danger {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+            border-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <!-- Screensaver Mode -->
+    <div class="screensaver" id="screensaver">
+        <canvas class="screensaver-canvas" id="screensaver-canvas"></canvas>
+        <div class="screensaver-text" id="screensaver-text">Waiting for signals</div>
+        <div class="screensaver-subtitle">Preparing model space</div>
+    </div>
+    
+    <!-- Main Interface -->
+    <div class="main-interface" id="main-interface">
+        <div class="header">
+            <h1 class="title">Collective Embedding</h1>
+            <p class="subtitle">Mapping interaction patterns beyond identity</p>
+        </div>
+        
+        <div class="controls">
+            <button class="btn primary" onclick="showAdminInterface()">
+                Launch Admin Interface
+            </button>
+            <button class="btn" onclick="toggleScreensaver()">
+                Toggle Screensaver
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // Screensaver animation
+        class NetworkScreensaver {
+            constructor() {
+                this.canvas = document.getElementById('screensaver-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.nodes = [];
+                this.edges = [];
+                this.maxNodes = 15;
+                this.maxEdges = 25;
+                this.animationId = null;
+                
+                this.setupCanvas();
+                this.initializeNodes();
+                this.animate();
+                
+                window.addEventListener('resize', () => this.setupCanvas());
+            }
+            
+            setupCanvas() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+            
+            initializeNodes() {
+                for (let i = 0; i < this.maxNodes; i++) {
+                    this.nodes.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        vx: (Math.random() - 0.5) * 0.5,
+                        vy: (Math.random() - 0.5) * 0.5,
+                        radius: Math.random() * 4 + 2,
+                        opacity: 0,
+                        targetOpacity: Math.random() * 0.8 + 0.2,
+                        age: 0
+                    });
+                }
+            }
+            
+            updateNodes() {
+                this.nodes.forEach(node => {
+                    // Move nodes
+                    node.x += node.vx;
+                    node.y += node.vy;
+                    
+                    // Bounce off edges
+                    if (node.x <= 0 || node.x >= this.canvas.width) node.vx *= -1;
+                    if (node.y <= 0 || node.y >= this.canvas.height) node.vy *= -1;
+                    
+                    // Keep nodes in bounds
+                    node.x = Math.max(0, Math.min(this.canvas.width, node.x));
+                    node.y = Math.max(0, Math.min(this.canvas.height, node.y));
+                    
+                    // Fade in/out
+                    node.age += 0.01;
+                    if (node.age < 1) {
+                        node.opacity = node.targetOpacity * node.age;
+                    } else if (node.age > 8) {
+                        node.opacity = node.targetOpacity * (10 - node.age) / 2;
+                    }
+                    
+                    // Respawn node
+                    if (node.age > 10) {
+                        node.x = Math.random() * this.canvas.width;
+                        node.y = Math.random() * this.canvas.height;
+                        node.age = 0;
+                        node.targetOpacity = Math.random() * 0.8 + 0.2;
+                    }
+                });
+            }
+            
+            updateEdges() {
+                this.edges = [];
+                
+                for (let i = 0; i < this.nodes.length; i++) {
+                    for (let j = i + 1; j < this.nodes.length; j++) {
+                        const node1 = this.nodes[i];
+                        const node2 = this.nodes[j];
+                        const distance = Math.sqrt(
+                            Math.pow(node1.x - node2.x, 2) + Math.pow(node1.y - node2.y, 2)
+                        );
+                        
+                        if (distance < 150 && Math.random() < 0.3) {
+                            this.edges.push({
+                                x1: node1.x,
+                                y1: node1.y,
+                                x2: node2.x,
+                                y2: node2.y,
+                                opacity: Math.min(node1.opacity, node2.opacity) * 0.5
+                            });
+                        }
+                    }
+                }
+            }
+            
+            draw() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw edges
+                this.edges.forEach(edge => {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(edge.x1, edge.y1);
+                    this.ctx.lineTo(edge.x2, edge.y2);
+                    this.ctx.strokeStyle = `rgba(255, 255, 255, ${edge.opacity})`;
+                    this.ctx.lineWidth = 0.5;
+                    this.ctx.stroke();
+                });
+                
+                // Draw nodes
+                this.nodes.forEach(node => {
+                    this.ctx.beginPath();
+                    this.ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+                    this.ctx.fillStyle = `rgba(255, 255, 255, ${node.opacity})`;
+                    this.ctx.fill();
+                });
+            }
+            
+            animate() {
+                this.updateNodes();
+                this.updateEdges();
+                this.draw();
+                this.animationId = requestAnimationFrame(() => this.animate());
+            }
+            
+            stop() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                }
+            }
+        }
+        
+        // Screensaver text rotation
+        const screensaverTexts = [
+            "Waiting for signals",
+            "Preparing model space",
+            "Mapping interaction patterns",
+            "Initializing collective memory",
+            "Detecting emergent structures"
+        ];
+        
+        let currentTextIndex = 0;
+        let screensaver = null;
+        
+        function rotateScreensaverText() {
+            const textElement = document.getElementById('screensaver-text');
+            textElement.style.opacity = 0;
+            
+            setTimeout(() => {
+                currentTextIndex = (currentTextIndex + 1) % screensaverTexts.length;
+                textElement.textContent = screensaverTexts[currentTextIndex];
+                textElement.style.opacity = 0.8;
+            }, 500);
+        }
+        
+        function initScreensaver() {
+            if (!screensaver) {
+                screensaver = new NetworkScreensaver();
+            }
+            
+            // Rotate text every 4 seconds
+            setInterval(rotateScreensaverText, 4000);
+        }
+        
+        function showAdminInterface() {
+            window.open('/admin', '_blank');
+        }
+        
+        function toggleScreensaver() {
+            const screensaverEl = document.getElementById('screensaver');
+            const mainInterface = document.getElementById('main-interface');
+            
+            if (screensaverEl.style.display === 'none') {
+                screensaverEl.style.display = 'flex';
+                mainInterface.style.display = 'none';
+                if (screensaver) {
+                    screensaver.animate();
+                }
+            } else {
+                screensaverEl.style.display = 'none';
+                mainInterface.style.display = 'block';
+                if (screensaver) {
+                    screensaver.stop();
+                }
+            }
+        }
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            initScreensaver();
+            
+            // Auto-switch to main interface after 10 seconds for demo
+            setTimeout(() => {
+                // Uncomment to auto-switch: toggleScreensaver();
+            }, 10000);
+        });
+    </script>
+</body>
+</html>

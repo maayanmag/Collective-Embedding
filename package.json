@@ -1,0 +1,25 @@
+{
+  "name": "collective-embedding",
+  "version": "1.0.0",
+  "description": "Interactive live experiment showing humans as language models see them - abstract patterns of interaction without identities",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "npm run server",
+    "server": "nodemon server/index.js",
+    "start": "node server/index.js"
+  },
+  "keywords": ["bezalel", "interactive", "experiment", "network", "visualization", "real-time"],
+  "author": "Bezalel Academy",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "cors": "^2.8.5",
+    "qrcode": "^1.5.3",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "concurrently": "^8.2.2"
+  }
+}

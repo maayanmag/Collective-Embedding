@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collective Embedding - Participant</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 100vw;
+            overflow: hidden;
+        }
+        
+        .screen {
+            display: none;
+            height: 100vh;
+            padding: 2rem;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .screen.active {
+            display: flex;
+        }
+        
+        /* Join Screen */
+        .join-screen {
+            flex-direction: column;
+        }
+        
+        .join-title {
+            font-size: 2rem;
+            font-weight: 200;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #ffffff, #cccccc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .join-subtitle {
+            font-size: 1rem;
+            color: #888;
+            margin-bottom: 3rem;
+            line-height: 1.5;
+        }
+        
+        .form-group {
+            margin-bottom: 2rem;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #007bff;
+        }
+        
+        .form-input::placeholder {
+            color: #666;
+        }
+        
+        .btn {
+            width: 100%;
+            max-width: 300px;
+            padding: 1rem 2rem;
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            border: 1px solid #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        
+        .btn:hover:not(:disabled) {
+            background: linear-gradient(45deg, #0056b3, #004494);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Status Screen */
+        .status-screen {
+            flex-direction: column;
+        }
+        
+        .status-title {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+        }
+        
+        .status-subtitle {
+            font-size: 1rem;
+            color: #888;
+            margin-bottom: 2rem;
+        }
+        
+        .connection-status {
+            padding: 1rem;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 8px;
+            color: #00ff88;
+            margin-bottom: 2rem;
+        }
+        
+        .waiting-animation {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Question Screen */
+        .question-screen {
+            flex-direction: column;
+            padding: 1.5rem;
+        }
+        
+        .question-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .question-number {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 0.5rem;
+        }
+        
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 300;
+            line-height: 1.4;
+            color: #ffffff;
+        }
+        
+        .timer-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+        
+        .timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff, #0056b3);
+            border-radius: 2px;
+            transition: width 1s linear;
+        }
+        
+        .timer-text {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 0.5rem;
+        }
+        
+        .participants-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 2rem;
+        }
+        
+        .participant-option {
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-size: 1rem;
+        }
+        
+        .participant-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #007bff;
+        }
+        
+        .participant-option.selected {
+            background: rgba(0, 123, 255, 0.2);
+            border-color: #007bff;
+            color: #ffffff;
+        }
+        
+        .question-actions {
+            display: flex;
+            gap: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #ccc;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        /* Submitted Screen */
+        .submitted-screen {
+            flex-direction: column;
+        }
+        
+        .submitted-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #00ff88, #00cc6a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            font-size: 2rem;
+        }
+        
+        .submitted-title {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 1rem;
+        }
+        
+        .submitted-subtitle {
+            font-size: 1rem;
+            color: #888;
+        }
+        
+        /* Final Screen */
+        .final-screen {
+            flex-direction: column;
+        }
+        
+        .final-title {
+            font-size: 1.8rem;
+            font-weight: 200;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .final-message {
+            font-size: 1rem;
+            color: #ccc;
+            line-height: 1.6;
+            max-width: 300px;
+        }
+        
+        /* Error states */
+        .error-message {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid #dc3545;
+            color: #dc3545;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-height: 600px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .question-screen {
+                padding: 1rem;
+            }
+            
+            .join-title, .status-title, .submitted-title {
+                font-size: 1.3rem;
+            }
+            
+            .question-text {
+                font-size: 1.1rem;
+            }
+        }
+        
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Join Screen -->
+        <div class="screen join-screen active" id="join-screen">
+            <h1 class="join-title">Collective Embedding</h1>
+            <p class="join-subtitle">Enter your first name or nickname<br>to join the mapping experiment</p>
+            
+            <form id="join-form">
+                <div class="form-group">
+                    <label class="form-label" for="name-input">Your Name</label>
+                    <input 
+                        type="text" 
+                        id="name-input" 
+                        class="form-input" 
+                        placeholder="Enter your name"
+                        maxlength="20"
+                        required
+                        autocomplete="off"
+                    >
+                </div>
+                
+                <button type="submit" class="btn" id="join-btn">
+                    Join Session
+                </button>
+            </form>
+            
+            <div id="join-error" class="error-message" style="display: none;"></div>
+        </div>
+        
+        <!-- Status/Waiting Screen -->
+        <div class="screen status-screen" id="status-screen">
+            <h2 class="status-title">Connected</h2>
+            <p class="status-subtitle">Waiting for signals</p>
+            
+            <div class="connection-status">
+                <div class="waiting-animation"></div>
+                <div>Ready to begin mapping</div>
+            </div>
+            
+            <p style="color: #666; font-size: 0.9rem;">
+                You'll receive questions about your classmates.<br>
+                Your responses are completely private.
+            </p>
+        </div>
+        
+        <!-- Question Screen -->
+        <div class="screen question-screen" id="question-screen">
+            <div class="question-header">
+                <div class="question-number" id="question-number">Question 1 of 20</div>
+                <div class="question-text" id="question-text"></div>
+                <div class="timer-bar">
+                    <div class="timer-fill" id="timer-fill"></div>
+                </div>
+                <div class="timer-text" id="timer-text">20 seconds remaining</div>
+            </div>
+            
+            <div class="participants-list" id="participants-list">
+                <!-- Participant options will be populated here -->
+            </div>
+            
+            <div class="question-actions">
+                <button class="btn btn-secondary" id="skip-btn">Skip</button>
+                <button class="btn" id="submit-btn" disabled>Submit</button>
+            </div>
+        </div>
+        
+        <!-- Submitted Screen -->
+        <div class="screen submitted-screen" id="submitted-screen">
+            <div class="submitted-icon">✓</div>
+            <h2 class="submitted-title">Response Sent</h2>
+            <p class="submitted-subtitle">Waiting for next signal...</p>
+        </div>
+        
+        <!-- Final Screen -->
+        <div class="screen final-screen" id="final-screen">
+            <h2 class="final-title">Identity Layer Removed</h2>
+            <p class="final-message">
+                Only the structure remains.<br><br>
+                The patterns of interaction continue to exist, 
+                but identities have been permanently dissolved 
+                into the collective memory.
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // Socket connection
+        const socket = io();
+        
+        // Global state
+        let participantId = null;
+        let currentQuestionIndex = -1;
+        let selectedParticipantId = null;
+        let participants = [];
+        let questionTimer = null;
+        let timeRemaining = 20;
+        
+        // Screen management
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+        
+        // Get session ID from URL
+        function getSessionId() {
+            const pathParts = window.location.pathname.split('/');
+            return pathParts[pathParts.length - 1];
+        }
+        
+        // Join form handling
+        document.getElementById('join-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name-input').value.trim();
+            if (!name) return;
+            
+            const joinBtn = document.getElementById('join-btn');
+            joinBtn.disabled = true;
+            joinBtn.textContent = 'Joining...';
+            
+            const sessionId = getSessionId();
+            socket.emit('join-session', { sessionId, name });
+        });
+        
+        // Socket event handlers
+        socket.on('joined', (data) => {
+            participantId = data.participantId;
+            showScreen('status-screen');
+            
+            // Add some personality to the waiting message
+            setTimeout(() => {
+                document.querySelector('.status-subtitle').textContent = 'Preparing to map interaction patterns';
+            }, 2000);
+        });
+        
+        socket.on('join-error', (data) => {
+            const errorEl = document.getElementById('join-error');
+            errorEl.textContent = data.message;
+            errorEl.style.display = 'block';
+            
+            const joinBtn = document.getElementById('join-btn');
+            joinBtn.disabled = false;
+            joinBtn.textContent = 'Join Session';
+        });
+        
+        socket.on('new-question', (data) => {
+            currentQuestionIndex = data.questionIndex;
+            participants = data.participants;
+            selectedParticipantId = null;
+            
+            // Update question display
+            document.getElementById('question-number').textContent = 
+                `Question ${data.questionIndex + 1} of 20`;
+            document.getElementById('question-text').textContent = data.question;
+            
+            // Populate participant options (including self)
+            const participantsList = document.getElementById('participants-list');
+            participantsList.innerHTML = participants
+                .map(p => 
+                    `<button class="participant-option" data-id="${p.id}">
+                        ${p.name}${p.id === participantId ? ' (Me)' : ''}
+                    </button>`
+                ).join('');
+            
+            // Add click handlers for participant options
+            participantsList.querySelectorAll('.participant-option').forEach(option => {
+                option.addEventListener('click', () => selectParticipant(option));
+            });
+            
+            // Reset submit button
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submit';
+            
+            showScreen('question-screen');
+            startQuestionTimer();
+        });
+        
+        // Timer functions
+        function startQuestionTimer() {
+            timeRemaining = 20;
+            updateTimerDisplay();
+            
+            if (questionTimer) {
+                clearInterval(questionTimer);
+            }
+            
+            questionTimer = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(questionTimer);
+                    // Auto-skip if no answer
+                    if (!selectedParticipantId) {
+                        socket.emit('submit-response', {
+                            questionIndex: currentQuestionIndex,
+                            targetParticipantId: null
+                        });
+                        showScreen('submitted-screen');
+                    }
+                }
+            }, 1000);
+        }
+        
+        function updateTimerDisplay() {
+            const timerFill = document.getElementById('timer-fill');
+            const timerText = document.getElementById('timer-text');
+            
+            const percentage = (timeRemaining / 20) * 100;
+            timerFill.style.width = `${percentage}%`;
+            
+            if (timeRemaining > 0) {
+                timerText.textContent = `${timeRemaining} seconds remaining`;
+            } else {
+                timerText.textContent = 'Time up!';
+            }
+            
+            // Change color when time is running out
+            if (timeRemaining <= 5) {
+                timerFill.style.background = 'linear-gradient(90deg, #ff453a, #dc3545)';
+            } else {
+                timerFill.style.background = 'linear-gradient(90deg, #007bff, #0056b3)';
+            }
+        }
+        
+        function stopTimer() {
+            if (questionTimer) {
+                clearInterval(questionTimer);
+                questionTimer = null;
+            }
+        }
+        
+        socket.on('response-submitted', () => {
+            stopTimer(); // Stop the timer when response is submitted
+            showScreen('submitted-screen');
+            
+            // Add some animation
+            const icon = document.querySelector('.submitted-icon');
+            icon.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                icon.style.transform = 'scale(1)';
+            }, 200);
+        });
+        
+        socket.on('identity-deleted', () => {
+            showScreen('final-screen');
+            
+            // Add subtle pulse animation to final message
+            document.querySelector('.final-message').classList.add('pulse');
+        });
+        
+        // Participant selection
+        function selectParticipant(option) {
+            // Remove previous selection
+            document.querySelectorAll('.participant-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Select new option
+            option.classList.add('selected');
+            selectedParticipantId = option.dataset.id;
+            
+            // Enable submit button
+            document.getElementById('submit-btn').disabled = false;
+        }
+        
+        // Submit response
+        document.getElementById('submit-btn').addEventListener('click', () => {
+            if (!selectedParticipantId) return;
+            
+            socket.emit('submit-response', {
+                questionIndex: currentQuestionIndex,
+                targetParticipantId: selectedParticipantId
+            });
+            
+            // Disable submit to prevent double-submission
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('submit-btn').textContent = 'Sending...';
+        });
+        
+        // Skip question
+        document.getElementById('skip-btn').addEventListener('click', () => {
+            socket.emit('submit-response', {
+                questionIndex: currentQuestionIndex,
+                targetParticipantId: null
+            });
+            
+            showScreen('submitted-screen');
+        });
+        
+        // Prevent accidental refresh/back
+        window.addEventListener('beforeunload', (e) => {
+            e.preventDefault();
+            e.returnValue = '';
+        });
+        
+        // Auto-focus name input and handle pre-filled test names
+        document.addEventListener('DOMContentLoaded', () => {
+            const nameInput = document.getElementById('name-input');
+            
+            // Check for testName URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const testName = urlParams.get('testName');
+            
+            if (testName) {
+                nameInput.value = testName;
+                // Auto-submit for test users after a short delay
+                setTimeout(() => {
+                    document.getElementById('join-form').dispatchEvent(new Event('submit'));
+                }, 1000);
+            } else {
+                nameInput.focus();
+            }
+        });
+        
+        // Handle enter key in name input
+        document.getElementById('name-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('join-form').dispatchEvent(new Event('submit'));
+            }
+        });
+        
+        // Handle connection errors
+        socket.on('connect_error', () => {
+            const errorEl = document.getElementById('join-error');
+            errorEl.textContent = 'Connection error. Please check your network and try again.';
+            errorEl.style.display = 'block';
+        });
+        
+        socket.on('disconnect', () => {
+            // Only show error if not on final screen (which is expected end state)
+            if (!document.getElementById('final-screen').classList.contains('active')) {
+                const errorEl = document.getElementById('join-error');
+                errorEl.textContent = 'Connection lost. Please refresh to rejoin.';
+                errorEl.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
