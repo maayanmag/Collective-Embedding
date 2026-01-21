@@ -194,6 +194,22 @@ Built as an experience system that helps groups understand how:
 - Public view never reveals personal identifiers
 - Focus on patterns, not individuals
 
+## 🚀 Live Demo
+
+**Try the system now:** https://collective-embedding-production.up.railway.app
+
+### Access Points
+- **🎛️ Admin Interface**: https://collective-embedding-production.up.railway.app/admin
+- **📱 Participant Join**: https://collective-embedding-production.up.railway.app/
+- **📖 Source Code**: https://github.com/maayanmag/Collective-Embedding
+
+### Quick Demo Steps
+1. Open admin interface at the URL above
+2. Click "Initialize Embedding Space" 
+3. Share the QR code with participants
+4. Click "Start Questions" to begin
+5. Watch real-time network formation
+
 ## Installation & Setup
 
 ### Prerequisites
@@ -201,11 +217,11 @@ Built as an experience system that helps groups understand how:
 - npm or yarn
 - Modern web browser with WebGL support
 
-### Quick Start
+### Local Development
 ```bash
 # Clone repository
-git clone [repository-url]
-cd collective_embedding
+git clone https://github.com/maayanmag/Collective-Embedding.git
+cd Collective-Embedding
 
 # Install dependencies
 npm install
@@ -216,6 +232,9 @@ npm run dev
 # Open admin interface
 open http://localhost:3000/admin
 ```
+
+### Production Deployment
+For production deployment options (Railway, Heroku, Render), see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ### Production Deployment
 ```bash
