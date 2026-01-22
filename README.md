@@ -26,6 +26,9 @@ The interface avoids social or gamified metaphors and instead presents a calm, s
 ![Admin Interface](media/admin_screenshot)
 *The admin interface showing real-time network visualization with nodes colored by embedding vectors and edges scaled by interaction weight*
 
+![Admin Interface - Active Session](media/admin_screenshot_2.png)
+*Admin interface during an active session showing question flow control, participant metrics, and real-time network formation*
+
 ## Four-Channel Embedding Model
 
 The system captures human relationships across exactly four interaction channels:
