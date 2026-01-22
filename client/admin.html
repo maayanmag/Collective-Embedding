@@ -1200,14 +1200,21 @@
                 const status = await response.json();
                 
                 if (status.active) {
-                    document.getElementById('participant-count').textContent = status.participantCount;
+                    document.getElementById('participant-count').textContent = status.participantCount || 0;
                     document.getElementById('current-question').textContent = 
                         status.currentQuestionIndex >= 0 ? status.currentQuestionIndex + 1 : '—';
-                    document.getElementById('epoch-count').textContent = status.epochCount;
+                    document.getElementById('epoch-count').textContent = status.epochCount || 0;
                     
                     const progress = status.currentQuestionIndex >= 0 ? 
                         ((status.currentQuestionIndex + 1) / status.totalQuestions) * 100 : 0;
                     document.getElementById('progress-percent').textContent = `${Math.round(progress)}%`;
+                } else {
+                    // Reset UI when no active session
+                    document.getElementById('participant-count').textContent = '0';
+                    document.getElementById('current-question').textContent = '—';
+                    document.getElementById('epoch-count').textContent = '0';
+                    document.getElementById('progress-percent').textContent = '0%';
+                    document.getElementById('response-count').textContent = '0 / 0 received';
                 }
             } catch (error) {
                 console.error('Error polling status:', error);
