@@ -99,9 +99,9 @@ Example: *"This node exhibits primary creative / generative influence patterns. 
 - Public view shows anonymous node appearance
 
 ### 3. Question Flow
-- 16 questions across four channels (4 per channel)
+- 20 questions across four channels (5 per channel)
 - Real-time responses update embedding vectors
-- Batch updates every 4-5 questions simulate "training epochs"
+- Automatic advancement with session end handling
 
 ### 4. Identity Removal (Optional)
 - Permanent deletion of name-to-node mappings
@@ -117,17 +117,18 @@ Example: *"This node exhibits primary creative / generative influence patterns. 
 - **Devices**: Participants join via smartphones/laptops
 
 ### Running a Session
-1. Open admin interface: `http://localhost:3000/admin`
+1. Open admin interface: `https://collective-embedding-production.up.railway.app/admin` (or locally at `http://localhost:3000/admin`)
 2. Click "Initialize Embedding Space"
 3. Share QR code or join URL with participants
-4. Run through question batches using "Next Signal Batch"
-5. Process epochs to update visualization
-6. Optional: Remove identity layer for pure abstraction
+4. Click "Start Questions" to begin automatic question flow
+5. Use "Pause Questions" to control flow if needed
+6. Optional: Click "End Session" to terminate or wait for natural completion
 
 ### Key Controls
-- **Next Signal Batch**: Advance to next question
-- **Process Epoch**: Update network visualization with accumulated responses
-- **Remove Identity Layer**: Permanently switch to abstract node labels
+- **Start Questions**: Begin automatic question sequence
+- **Pause/Resume Questions**: Control question flow during session
+- **End Session**: Manually terminate session and reset
+- **Add Test Node**: Add simulated participants for testing
 
 ## Technical Architecture
 
@@ -234,13 +235,9 @@ open http://localhost:3000/admin
 ```
 
 ### Production Deployment
-For production deployment options (Railway, Heroku, Render), see [DEPLOYMENT.md](DEPLOYMENT.md).
+The app is deployed on Railway and requires a Node.js environment with WebSocket support.
 
-### Production Deployment
 ```bash
-# Build for production
-npm run build
-
 # Start production server  
 npm start
 ```
@@ -251,16 +248,15 @@ npm start
 - `POST /api/session/create` - Initialize new session
 - `GET /api/session/status` - Get current session state
 - `GET /api/session/graph` - Retrieve network data with embeddings
+- `POST /api/session/end` - Manually terminate session
 
 ### Question Flow
-- `POST /api/session/next-question` - Advance to next question
-- `POST /api/session/epoch-update` - Process training epoch
-
-### Privacy Controls
-- `POST /api/session/delete-identity` - Permanently remove identity layer
+- `POST /api/session/start-questions` - Begin automatic question sequence
+- `POST /api/session/pause-resume` - Pause or resume question flow
+- `POST /api/session/next-question` - Advance to next question (legacy)
 
 ### Node Analysis  
-- `GET /api/session/node/:nodeId` - Get detailed node profile
+- `GET /api/session/node/:nodeId` - Get detailed node profile with embedding data
 
 ## License
 
